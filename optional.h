@@ -1,9 +1,7 @@
+#ifndef __OPTIONAL_H__
+#define  __OPTIONAL_H__
+
 #include <cassert>
-
-#include <iostream>
-using std::cout;
-using std::endl;
-
 
 enum Dummy{};
 
@@ -16,6 +14,20 @@ private:
     const bool present;
 
   public:
+    Optional(const Optional & that) : present(that.present) {
+      if (present) {
+        data = that.data;
+      }
+    }
+
+    explicit Optional(Optional && that) : present(that.present) {
+      if (present) {
+        data = std::move(that.data);
+      }
+    }
+
+    Optional& operator=(Optional&) = delete;
+
     bool isPresent() const {
       return present;
     }
@@ -36,11 +48,11 @@ private:
   private:
     Optional() : present(false) {}
 
-    explicit Optional(T&& value) : data(value), present(true) {}
+    explicit Optional(T&& value) : data(std::forward<T>(value)), present(true) {}
 
     template<typename ...Args>
     Optional(Dummy dummy, Args&&... args) :
-      data(T(std::forward<Args>(args)...)),
+      data(std::forward<Args>(args)...),
       present(true) {}
 
   public:
@@ -57,40 +69,4 @@ private:
 };
 
 
-class A {
-public:
-  A() {
-    cout << "ctor" << endl;
-  }
-
-  ~A() {
-    cout << "dtor" << endl;
-  }
-};
-
-
-int lemain() {
-  Optional<int> y = Optional<int>::of(99999999);
-  cout << y.isPresent() << endl;
-  cout << y.get() << endl;
-
-  Optional<int> x = Optional<int>::absent();
-  cout << x.isPresent() << endl;
-
-  cout << endl << endl << "first" << endl;
-  {
-    Optional<A> a(Optional<A>::of(A()));
-  }
-
-
-  cout << endl << endl << "second" << endl;
-  {
-    Optional<A> b = Optional<A>::absent();
-  }
-
-
-  cout << endl << endl << "third" << endl;
-  {
-    Optional<A> a(Optional<A>::of_emplaced());
-  }
-}
+#endif // __OPTIONAL_H__
