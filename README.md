@@ -18,8 +18,8 @@ thirteen.get();        // 13
 class ExpensiveToCopy {
     ExpensiveToCopy(string str, int num);
 };
-auto expensive = Optional<int>::of(ExpensiveToCopy("string", 7));  // Copy
-auto expensive = Optional<int>::of_emplaced("string", 7);          // No copy
+auto expensive = Optional<ExpensiveToCopy>::of(ExpensiveToCopy("string", 7));  // Copy
+auto expensive = Optional<ExpensiveToCopy>::of_emplaced("string", 7);          // No copy
 ```
 
 ## Tests
