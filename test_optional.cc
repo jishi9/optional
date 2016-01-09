@@ -110,7 +110,7 @@ TEST_CASE("No construction if absent") {
 
 TEST_CASE("of MoveTracker constructs once, moves once, and destructs both") {
   events.clear();
-  vector<string> expected = {{"ctor my", "move my.move", "dtor my.defunct"}};
+  vector<string> expected = {"ctor my", "move my.move", "dtor my.defunct"};
   {
     Optional<MoveTracker> t = Optional<MoveTracker>::of(MoveTracker("my"));
     REQUIRE(events == expected);
@@ -121,7 +121,7 @@ TEST_CASE("of MoveTracker constructs once, moves once, and destructs both") {
 
 TEST_CASE("of_emplaced MoveTracker constructs once and destructs once") {
   events.clear();
-  vector<string> expected = {{"ctor empl"}};
+  vector<string> expected = {"ctor empl"};
   {
     Optional<MoveTracker> t = Optional<MoveTracker>::of_emplaced("empl");
     REQUIRE(events == expected);
@@ -132,7 +132,7 @@ TEST_CASE("of_emplaced MoveTracker constructs once and destructs once") {
 
 TEST_CASE("of CopyTracker constructs once, copies once, and destructs both") {
   events.clear();
-  vector<string> expected = {{"ctor my", "copy my.copy", "dtor my"}};
+  vector<string> expected = {"ctor my", "copy my.copy", "dtor my"};
   {
     Optional<CopyTracker> t = Optional<CopyTracker>::of(CopyTracker("my"));
     REQUIRE(events == expected);
@@ -143,7 +143,7 @@ TEST_CASE("of CopyTracker constructs once, copies once, and destructs both") {
 
 TEST_CASE("of_emplaced CopyTracker constructs once and destructs once") {
   events.clear();
-  vector<string> expected = {{"ctor empl"}};
+  vector<string> expected = {"ctor empl"};
   {
     Optional<CopyTracker> t = Optional<CopyTracker>::of_emplaced("empl");
     REQUIRE(events == expected);
@@ -151,6 +151,76 @@ TEST_CASE("of_emplaced CopyTracker constructs once and destructs once") {
   expected.push_back("dtor empl");
   REQUIRE(events == expected);
 }
+
+struct ConstructByValue {
+  ConstructByValue(CopyTracker) {}
+};
+
+struct ConstructByConstValue {
+  ConstructByConstValue(const CopyTracker) {}
+};
+
+struct ConstructByReference {
+  ConstructByReference(CopyTracker&) {}
+};
+
+struct ConstructByConstReference {
+  ConstructByConstReference(const CopyTracker&) {}
+};
+
+struct ConstructByXReference {
+  ConstructByXReference(CopyTracker&&) {}
+};
+
+struct ConstructByConstXReference {
+  ConstructByConstXReference(const CopyTracker&&) {}
+};
+
+
+TEST_CASE("of_emplaced arguments are perfectly forwarded when passed by value") {
+  events.clear();
+  vector<string> expected = {"ctor arg", "copy arg.copy", "dtor arg.copy", "dtor arg"};
+  auto t = Optional<ConstructByValue>::of_emplaced(CopyTracker("arg"));
+  REQUIRE(events == expected);
+}
+
+TEST_CASE("of_emplaced arguments are perfectly forwarded when passed by const value") {
+  events.clear();
+  vector<string> expected = {"ctor arg", "copy arg.copy", "dtor arg.copy", "dtor arg"};
+  auto t = Optional<ConstructByConstValue>::of_emplaced(CopyTracker("arg"));
+  REQUIRE(events == expected);
+}
+
+TEST_CASE("of_emplaced arguments are perfectly forwarded when passed by reference") {
+  events.clear();
+  vector<string> expected = {"ctor arg"};
+  CopyTracker arg("arg");
+  auto t = Optional<ConstructByReference>::of_emplaced(arg);
+  REQUIRE(events == expected);
+}
+
+TEST_CASE("of_emplaced arguments are perfectly forwarded when passed by const reference") {
+  events.clear();
+  vector<string> expected = {"ctor arg"};
+  CopyTracker arg("arg");
+  auto t = Optional<ConstructByConstReference>::of_emplaced(arg);
+  REQUIRE(events == expected);
+}
+
+TEST_CASE("of_emplaced arguments are perfectly forwarded when passed by x-reference") {
+  events.clear();
+  vector<string> expected = {"ctor arg", "dtor arg"};
+  auto t = Optional<ConstructByXReference>::of_emplaced(CopyTracker("arg"));
+  REQUIRE(events == expected);
+}
+
+TEST_CASE("of_emplaced arguments are perfectly forwarded when passed by const x-reference") {
+  events.clear();
+  vector<string> expected = {"ctor arg", "dtor arg"};
+  auto t = Optional<ConstructByConstXReference>::of_emplaced(CopyTracker("arg"));
+  REQUIRE(events == expected);
+}
+
 
 // TODO if <T> has no copy/move constructor, then nothing works. Is that fine?
 // TEST_CASE("non-movable and non-copyable is emplace-able") {
