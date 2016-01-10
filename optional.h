@@ -1,8 +1,6 @@
 #ifndef __OPTIONAL_H__
 #define __OPTIONAL_H__
 
-#include <cassert>
-
 enum Dummy {};
 
 template <typename T>
